@@ -1,19 +1,22 @@
-FROM python:3.13.4-alpine3.22
+# 1. Escolha uma imagem base estável e leve
+FROM python:3.11-slim
 
-# Define o diretório de trabalho dentro do contêiner
+# 2. Defina o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copia o arquivo de requisitos e instala as dependências
-# Usamos --no-cache-dir para evitar o cache do pip, reduzindo o tamanho da imagem
+# 3. Copie o arquivo de dependências primeiro para aproveitar o cache do Docker
+# O Docker só reinstalará as dependências se este arquivo mudar.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o restante do código da aplicação para o diretório de trabalho
+# 4. Instale as dependências
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# 5. Copie o restante do código da aplicação
 COPY . .
 
-# Expõe a porta que a aplicação FastAPI irá rodar (padrão é 8000)
+# 6. Exponha a porta em que a aplicação será executada
 EXPOSE 8000
 
-# Comando para rodar a aplicação usando uvicorn
-# O host 0.0.0.0 permite que a aplicação seja acessível externamente ao contêiner
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000",  "--reload"]
+# 7. Defina o comando para iniciar a aplicação com Uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
